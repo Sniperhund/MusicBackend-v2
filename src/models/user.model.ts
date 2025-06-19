@@ -1,3 +1,4 @@
+import { z } from "@hono/zod-openapi"
 import mongoose, { Schema } from "mongoose"
 import parse from "parse-duration"
 
@@ -13,7 +14,8 @@ const userSchema = new Schema({
     },
     passwordHash: {
         type: String,
-        required: true
+        required: true,
+        select: false
     },
     role: {
         type: String,
@@ -25,12 +27,14 @@ const userSchema = new Schema({
         // TODO: Maybe implement whole schema for refresh tokens to make it possible to invalidate only one client
         type: String,
         default: () => crypto.randomUUID(),
-        required: true
+        required: true,
+        select: false
     },
     verified: {
         type: Boolean,
         default: false,
-        required: true
+        required: true,
+        select: false
     },
     savedTracks: [
         {
@@ -38,21 +42,29 @@ const userSchema = new Schema({
             ref: "Track"
         }
     ]
-})
+}, { timestamps: true })
 
 export const User = mongoose.model("User", userSchema)
 
-const sessionTTL = parse(process.env.TOKEN_EXPIRE || "1h") || 3600000
+export const UserZodSchema = z.object({
+    name: z.string(),
+    email: z.string().email(),
+    password: z.string().min(8)
+})
+
+export const sessionTTL = parse(process.env.TOKEN_EXPIRE || "1h") || 3600000
 
 const sessionSchema = new Schema({
     token: {
         type: String,
+        default: () => crypto.randomUUID(),
         required: true
     },
     createdAt: {
         type: Date,
         default: Date.now,
-        index: { expires: Math.floor(sessionTTL / 1000) }
+        index: { expires: Math.floor(sessionTTL / 1000) },
+        required: true
     },
     userId: {
         type: Schema.Types.ObjectId,

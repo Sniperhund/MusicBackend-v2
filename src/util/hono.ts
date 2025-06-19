@@ -1,7 +1,15 @@
 import { OpenAPIHono } from "@hono/zod-openapi"
 import { swaggerUI } from "@hono/swagger-ui"
 
-export const app = new OpenAPIHono()
+export const app = new OpenAPIHono({
+    defaultHook: (result, c) => {
+        if (!result.success) {
+            return c.json({
+                message: result.error.issues[0].message
+            }, 400)
+        }
+    }
+})
 
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     type: "http",
