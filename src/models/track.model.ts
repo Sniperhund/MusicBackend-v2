@@ -24,6 +24,18 @@ const trackSchema = new Schema({
     durationInSeconds: {
         type: Number,
         required: true
+    },
+    lyrics: {
+        type: {
+            synced: {
+                type: Boolean,
+                required: true
+            },
+            text: {
+                type: String,
+                required: true
+            }
+        }
     }
 })
 

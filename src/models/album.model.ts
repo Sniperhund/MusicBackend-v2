@@ -12,7 +12,7 @@ const albumSchema = new Schema({
         }],
         required: true
     },
-    file:  {
+    file: {
         type: String,
         required: true
     },
