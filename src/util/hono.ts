@@ -1,3 +1,6 @@
+import { logger } from "hono/logger"
+import { prettyJSON } from "hono/pretty-json"
+import { cors } from "hono/cors"
 import { OpenAPIHono } from "@hono/zod-openapi"
 import { swaggerUI } from "@hono/swagger-ui"
 
@@ -10,6 +13,10 @@ export const app = new OpenAPIHono({
         }
     }
 })
+
+app.use(cors())
+app.use(logger())
+app.use(prettyJSON())
 
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     type: "http",
