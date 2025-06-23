@@ -15,5 +15,6 @@ app.get("/", (c) => {
 })
 
 import "routes/auth.route"
+import "routes/admin/genre.route"
 
 export default app
