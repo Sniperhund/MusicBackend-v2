@@ -1,3 +1,4 @@
+import { z } from "@hono/zod-openapi"
 import mongoose, { Schema } from "mongoose"
 
 const genreSchema = new Schema({
@@ -8,3 +9,7 @@ const genreSchema = new Schema({
 })
 
 export const Genre = mongoose.model("Genre", genreSchema)
+
+export const GenreZodSchema = z.object({
+    name: z.string()
+})
