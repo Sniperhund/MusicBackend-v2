@@ -7,7 +7,7 @@ export const auth = createMiddleware(async (c, next) => {
 
     const session = await Session.findOne({
         token: c.req.header("Authorization")?.replace("Bearer ", "")
-    }).populate("userId")
+    }).populate({ path: "userId", select: "+verified" })
 
     // @ts-ignore verified does exist, as we populate userId above
     if (!session || !session.userId.verified) return c.json({ message: "Unauthorized" }, 401)
@@ -23,7 +23,7 @@ export const adminAuth = createMiddleware(async (c, next) => {
 
     const session = await Session.findOne({
         token: c.req.header("Authorization")?.replace("Bearer ", "")
-    }).populate("userId")
+    }).populate({ path: "userId", select: "+verified" })
 
     // @ts-ignore role and verified does exist, as we populate userId above
     if (!session || session.userId.role != "admin" || !session.userId.verified) return c.json({ message: "Unauthorized" }, 401)
