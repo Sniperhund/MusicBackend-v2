@@ -21,3 +21,11 @@ export const ZodMongooseId = z.coerce.string().refine(
         message: "Invalid id"
     }
 )
+
+export const ZodCommaSeparatedMongooseIds = z.coerce.string().transform(
+    (val) => val.split(",").map((id) => id.trim()).filter(Boolean)
+).refine((ids) => ids.every((id) => mongoose.isValidObjectId(id)), {
+    message: "One or more ID(s) are invalid"
+}).openapi({
+    type: "array"
+})
