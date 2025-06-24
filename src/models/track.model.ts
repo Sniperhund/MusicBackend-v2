@@ -1,3 +1,5 @@
+import { ZodCommaSeparatedMongooseIds, ZodMongooseId } from "@/util"
+import { z } from "@hono/zod-openapi"
 import mongoose, { Schema } from "mongoose"
 
 const trackSchema = new Schema({
@@ -17,7 +19,7 @@ const trackSchema = new Schema({
         }],
         required: true
     },
-    file: {
+    fileDir: {
         type: String,
         required: true
     },
@@ -40,3 +42,13 @@ const trackSchema = new Schema({
 })
 
 export const Track = mongoose.model("Track", trackSchema)
+
+export const TrackZodSchema = z.object({
+    name: z.string(),
+    album: ZodMongooseId,
+    artists: ZodCommaSeparatedMongooseIds,
+    file: z.file().openapi({
+        type: "string",
+        format: "binary"
+    })
+})

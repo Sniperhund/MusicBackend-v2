@@ -9,5 +9,6 @@ app.get("/", (c) => {
 
 import "routes/auth.route"
 import "routes/admin/genre.route"
+import "routes/admin/track.route"
 
 export default app
