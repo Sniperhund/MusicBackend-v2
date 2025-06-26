@@ -136,3 +136,35 @@ app.openapi(
         return c.json(track, 200)
     }
 )
+
+app.openapi(
+    createRoute({
+        method: "delete",
+        path: "/admin/track",
+        tags: ["Admin"],
+        ...SecurityObject,
+        request: {
+            query: z.object({
+                id: ZodMongooseId
+            })
+        },
+        middleware: [adminAuth] as const,
+        responses: {
+            200: {
+                description: "Track deleted"
+            },
+            404: StdError("Track not found")
+        }
+    }),
+    async (c) => {
+        const { id } = c.req.valid("query")
+
+        const track = await Track.findByIdAndDelete(id)
+
+        if (!track) {
+            return c.json({ message: "Track not found" }, 404)
+        }
+
+        return c.json({}, 200)
+    }
+)
