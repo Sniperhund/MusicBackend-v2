@@ -10,5 +10,6 @@ app.get("/", (c) => {
 import "routes/auth.route"
 import "routes/admin/genre.route"
 import "routes/admin/track.route"
+import "routes/admin/artist.route"
 
 export default app
