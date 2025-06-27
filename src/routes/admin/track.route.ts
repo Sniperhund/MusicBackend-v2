@@ -5,7 +5,7 @@ import { cleanFileOrDirectory, getAudioDuration, processAudioFile, saveFile } fr
 import { app } from "@/util/hono"
 import { StdError } from "@/util/responses"
 import { createRoute, z } from "@hono/zod-openapi"
-import { ObjectId, Types } from "mongoose"
+import { Types } from "mongoose"
 import * as fsPath from "path"
 
 

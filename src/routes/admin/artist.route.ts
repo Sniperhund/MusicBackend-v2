@@ -31,7 +31,7 @@ app.openapi(
                     }
                 }
             },
-            400: StdError("Track creation failed")
+            400: StdError("Artist creation failed")
         },
     }),
     async (c) => {
