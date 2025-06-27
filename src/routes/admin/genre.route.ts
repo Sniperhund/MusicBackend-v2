@@ -23,7 +23,12 @@ app.openapi(
         middleware: [adminAuth] as const,
         responses: {
             201: {
-                description: "Genre created"
+                description: "Genre created",
+                content: {
+                    "application/json": {
+                        schema: FormatOutputZodSchema(GenreZodSchema)
+                    }
+                }
             },
             400: StdError("Genre creation failed")
         }
@@ -32,8 +37,8 @@ app.openapi(
         const body = c.req.valid("json")
 
         try {
-            await Genre.create(body)
-            return c.json({}, 201)
+            const genre = await Genre.create(body)
+            return c.json(genre, 201)
         } catch(error: any) {
             if (error.code == 11000) {
                 return c.json({ message: "Genre already exists" }, 400)
