@@ -1,9 +1,11 @@
 import { adminAuth } from "@/middleware/auth"
+import { Album } from "@/models/album.model"
 import { Artist, ArtistZodSchema } from "@/models/artist.model"
-import { FormatOutputZodSchema, SecurityObject, ZodMongooseId } from "@/util"
+import { Track } from "@/models/track.model"
+import { findDependents, FormatOutputZodSchema, SecurityObject, ZodForceDeletion, ZodMongooseId } from "@/util"
 import { cleanFileOrDirectory, saveFile } from "@/util/file"
 import { app } from "@/util/hono"
-import { StdError } from "@/util/responses"
+import { DependentsError, StdError } from "@/util/responses"
 import { createRoute, z } from "@hono/zod-openapi"
 
 app.openapi(
@@ -122,7 +124,8 @@ app.openapi(
         ...SecurityObject,
         request: {
             query: z.object({
-                id: ZodMongooseId
+                id: ZodMongooseId,
+                force: ZodForceDeletion
             })
         },
         middleware: [adminAuth] as const,
@@ -130,17 +133,45 @@ app.openapi(
             200: {
                 description: "Artist deleted"
             },
-            404: StdError("Artist not found")
+            409: DependentsError("Artist")
         }
     }),
     async (c) => {
-        const { id } = c.req.valid("query")
+        const { id, force } = c.req.valid("query")
 
-        const artist = await Artist.findByIdAndDelete(id)
+        const artist = await Artist.findById(id)
 
         if (!artist) {
             return c.json({ message: "Artist not found" }, 404)
         }
+
+        let dependents = await findDependents(Track, "artists", artist._id)
+
+        if (force) {
+            await Promise.all(dependents.map(dep => Track.findByIdAndDelete(dep._id)))
+        } else if (dependents.length) {
+            return c.json({
+                message: "Artist has one or more dependents",
+                dependentType: "Track",
+                dependents
+            }, 409)
+        }
+
+        dependents = await findDependents(Album, "artists", artist._id)
+
+        if (force) {
+            await Promise.all(dependents.map(dep => Album.findByIdAndDelete(dep._id)))
+        } else if (dependents.length) {
+            return c.json({
+                message: "Artist has one or more dependents",
+                dependentType: "Artist",
+                dependents
+            }, 409)
+        }
+
+        await Artist.findByIdAndDelete(id)
+
+        cleanFileOrDirectory(artist.file)
 
         return c.json({}, 200)
     }
