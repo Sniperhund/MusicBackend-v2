@@ -1,5 +1,19 @@
 import { z } from "@hono/zod-openapi"
 import mongoose from "mongoose"
+import { Model, Types, InferSchemaType } from "mongoose"
+
+export async function findDependents<
+    M extends Model<any>,
+    Field extends keyof InferSchemaType<M["schema"]>
+>(model: M, field: Field, value: Types.ObjectId) {
+    const filter: Record<string, unknown> = {
+        [field as string]: value
+    }
+
+    return await model.find(filter).select("_id name")
+}
+
+export const ZodForceDeletion = z.boolean().describe("Will delete all dependents automatically")
 
 export const SecurityObject = {
     security: [
