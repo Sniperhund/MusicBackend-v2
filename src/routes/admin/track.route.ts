@@ -152,8 +152,7 @@ app.openapi(
         responses: {
             200: {
                 description: "Track deleted"
-            },
-            404: StdError("Track not found")
+            }
         }
     }),
     async (c) => {
@@ -162,8 +161,10 @@ app.openapi(
         const track = await Track.findByIdAndDelete(id)
 
         if (!track) {
-            return c.json({ message: "Track not found" }, 404)
+            return c.json({}, 404)
         }
+
+        cleanFileOrDirectory(track.fileDir)
 
         return c.json({}, 200)
     }
