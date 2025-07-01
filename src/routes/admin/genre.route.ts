@@ -1,8 +1,9 @@
 import { adminAuth } from "@/middleware/auth"
+import { Album } from "@/models/album.model"
 import { Genre, GenreZodSchema } from "@/models/genre.model"
-import { FormatOutputZodSchema, SecurityObject, ZodMongooseId } from "@/util"
+import { findDependents, FormatOutputZodSchema, SecurityObject, ZodMongooseId } from "@/util"
 import { app } from "@/util/hono"
-import { StdError } from "@/util/responses"
+import { DependentsError, StdError } from "@/util/responses"
 import { createRoute, z } from "@hono/zod-openapi"
 
 app.openapi(
@@ -102,7 +103,8 @@ app.openapi(
         ...SecurityObject,
         request: {
             query: z.object({
-                id: ZodMongooseId
+                id: ZodMongooseId,
+                force: z.boolean()
             })
         },
         middleware: [adminAuth] as const,
@@ -110,17 +112,31 @@ app.openapi(
             200: {
                 description: "Genre deleted"
             },
-            404: StdError("Genre not found")
+            409: DependentsError("Genre")
         }
     }),
     async (c) => {
-        const { id } = c.req.valid("query")
+        const { id, force } = c.req.valid("query")
 
-        const genre = await Genre.findByIdAndDelete(id)
+        const genre = await Genre.findById(id)
 
         if (!genre) {
             return c.json({ message: "Genre not found" }, 404)
         }
+
+        const dependents = await findDependents(Album, "genre", genre._id)
+
+        if (force) {
+            await Promise.all(dependents.map(dep => Album.findByIdAndDelete(dep._id)))
+        } else if (dependents.length) {
+            return c.json({
+                message: "Genre has one or more dependents",
+                dependentType: "Album",
+                dependents
+            }, 409)
+        }
+
+        await Genre.findByIdAndDelete(id)
 
         return c.json({}, 200)
     }
