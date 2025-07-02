@@ -3,8 +3,8 @@ import mongoose from "mongoose"
 import { Model, Types, InferSchemaType } from "mongoose"
 
 export async function findDependents<
-    M extends Model<any>,
-    Field extends keyof InferSchemaType<M["schema"]>
+M extends Model<any>,
+Field extends keyof InferSchemaType<M["schema"]>
 >(model: M, field: Field, value: Types.ObjectId) {
     const filter: Record<string, unknown> = {
         [field as string]: value
@@ -42,4 +42,11 @@ export const ZodCommaSeparatedMongooseIds = z.coerce.string().transform(
     message: "One or more ID(s) are invalid"
 }).openapi({
     type: "array"
+})
+
+export const ZodQueryUnionMongooseIds = z.object({
+    ids: z.union([
+        z.string().array(),
+        z.string()
+    ])
 })

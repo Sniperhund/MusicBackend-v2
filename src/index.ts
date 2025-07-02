@@ -7,10 +7,16 @@ app.get("/", (c) => {
     return c.json({ status: "ok" })
 })
 
+// Auth
 import "routes/auth.route"
+
+// Admin
 import "routes/admin/genre.route"
 import "routes/admin/track.route"
 import "routes/admin/artist.route"
 import "routes/admin/album.route"
+
+// Fetch data
+import "routes/artist.route"
 
 export default app
