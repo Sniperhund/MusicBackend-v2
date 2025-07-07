@@ -18,5 +18,6 @@ import "routes/admin/album.route"
 
 // Fetch data
 import "routes/artist.route"
+import "routes/genre.route"
 
 export default app
