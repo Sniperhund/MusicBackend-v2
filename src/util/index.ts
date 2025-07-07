@@ -46,7 +46,7 @@ export const ZodCommaSeparatedMongooseIds = z.coerce.string().transform(
 
 export const ZodQueryUnionMongooseIds = z.object({
     ids: z.union([
-        z.string().array(),
-        z.string()
+        ZodMongooseId.array(),
+        ZodMongooseId
     ])
 })
