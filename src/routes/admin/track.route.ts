@@ -38,7 +38,7 @@ app.openapi(
         }
     }),
     async (c) => {
-        const { name, album, artists, file } = c.req.valid("form")
+        const { name, album, artists, file, lyrics } = c.req.valid("form")
 
         if (!file.type.includes("audio/"))
             return c.json({ message: "Only audio files are accepted" }, 400)
@@ -56,7 +56,8 @@ app.openapi(
             album,
             artists,
             fileDir: fileInfo.dir,
-            durationInSeconds: Math.round(duration)
+            durationInSeconds: Math.round(duration),
+            lyrics
         })
 
         await track.save()
@@ -97,7 +98,7 @@ app.openapi(
         }
     }),
     async (c) => {
-        const { name, album, artists, file } = c.req.valid("form")
+        const { name, album, artists, file, lyrics } = c.req.valid("form")
         const { id } = c.req.valid("query")
 
         if (file && !file.type.includes("audio/"))
@@ -130,6 +131,8 @@ app.openapi(
 
             track.artists = artistIds
         }
+        if (lyrics && typeof lyrics == "string") track.lyrics = JSON.parse(lyrics) 
+        else if (lyrics && typeof lyrics != "string") track.lyrics = lyrics
 
         await track.save()
 

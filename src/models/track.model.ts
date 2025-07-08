@@ -50,5 +50,12 @@ export const TrackZodSchema = z.object({
     file: z.file().openapi({
         type: "string",
         format: "binary"
-    })
+    }),
+    lyrics: z.union([
+        z.object({
+            synced: z.boolean(),
+            text: z.string()
+        }),
+        z.string()
+    ]).optional()
 })
