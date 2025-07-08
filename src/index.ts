@@ -20,5 +20,6 @@ import "routes/admin/album.route"
 import "routes/artist.route"
 import "routes/genre.route"
 import "routes/album.route"
+import "routes/track.route"
 
 export default app
