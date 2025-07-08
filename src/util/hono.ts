@@ -15,7 +15,7 @@ export const app = new OpenAPIHono({
             }
 
             return c.json({
-                message: result.error.issues[0].message
+                message: `Field: ${result.error.issues[0].path[0]} - ${result.error.issues[0].message}`
             }, 400)
         }
     }
