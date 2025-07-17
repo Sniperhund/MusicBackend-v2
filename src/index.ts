@@ -22,4 +22,6 @@ import "routes/genre.route"
 import "routes/album.route"
 import "routes/track.route"
 
+import "routes/all.route"
+
 export default app
