@@ -23,5 +23,6 @@ import "routes/album.route"
 import "routes/track.route"
 
 import "routes/all.route"
+import "routes/search.route"
 
 export default app
