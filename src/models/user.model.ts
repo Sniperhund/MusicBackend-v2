@@ -1,6 +1,8 @@
+import { FormatOutputZodSchema } from "@/util"
 import { z } from "@hono/zod-openapi"
 import mongoose, { Schema } from "mongoose"
 import parse from "parse-duration"
+import { TrackZodSchema } from "./track.model"
 
 const userSchema = new Schema({
     name: {
@@ -50,6 +52,14 @@ export const UserZodSchema = z.object({
     name: z.string(),
     email: z.string().email(),
     password: z.string().min(8)
+})
+
+export const UserOutputZodSchema = z.object({
+    name: z.string(),
+    email: z.string().email(),
+    role: z.string(),
+    verified: z.coerce.boolean(),
+    savedTracks: z.array(FormatOutputZodSchema(TrackZodSchema))
 })
 
 export const sessionTTL = parse(process.env.TOKEN_EXPIRE || "1h") || 3600000

@@ -25,4 +25,6 @@ import "routes/track.route"
 import "routes/all.route"
 import "routes/search.route"
 
+import "routes/user.route"
+
 export default app
