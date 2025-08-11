@@ -94,7 +94,7 @@ app.openapi(
                 description: "Fetched tracks for an album",
                 content: {
                     "application/json": {
-                        schema: z.array(FormatOutputZodSchema(TrackZodSchema.omit({ album: true, artists: true }).extend({ artists: z.array(ArtistZodSchema) })))
+                        schema: z.array(FormatOutputZodSchema(TrackZodSchema.omit({ album: true, artists: true }).extend({ artists: z.array(ArtistZodSchema), album: AlbumZodSchema.omit({ artists: true, genre: true }) })))
                     }
                 }
             }
