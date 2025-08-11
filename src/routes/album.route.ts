@@ -107,8 +107,11 @@ app.openapi(
         const tracks = await Track.find({ album: id })
             .limit(limit || 9)
             .skip(skip || 0)
-            .select("-album")
             .populate("artists")
+            .populate({
+                path: "album",
+                select: "-artists -genre",
+            })
 
         return c.json(tracks, 200)
     }
