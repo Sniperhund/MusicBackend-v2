@@ -1,13 +1,17 @@
 import { adminAuth } from "@/middleware/auth"
 import { Track, TrackZodSchema } from "@/models/track.model"
 import { FormatOutputZodSchema, SecurityObject, ZodMongooseId } from "@/util"
-import { cleanFileOrDirectory, getAudioDuration, processAudioFile, saveFile } from "@/util/file"
+import {
+    cleanFileOrDirectory,
+    getAudioDuration,
+    processAudioFile,
+    saveFile,
+} from "@/util/file"
 import { app } from "@/util/hono"
 import { StdError } from "@/util/responses"
 import { createRoute, z } from "@hono/zod-openapi"
 import { Types } from "mongoose"
 import * as fsPath from "path"
-
 
 app.openapi(
     createRoute({
@@ -19,10 +23,10 @@ app.openapi(
             body: {
                 content: {
                     "multipart/form-data": {
-                        schema: TrackZodSchema
-                    }
-                }
-            }
+                        schema: TrackZodSchema,
+                    },
+                },
+            },
         },
         middleware: [adminAuth] as const,
         responses: {
@@ -30,12 +34,14 @@ app.openapi(
                 description: "Track created",
                 content: {
                     "application/json": {
-                        schema: FormatOutputZodSchema(TrackZodSchema).omit({ file: true }).extend({ fileDir: z.string() })
-                    }
-                }
+                        schema: FormatOutputZodSchema(TrackZodSchema)
+                            .omit({ file: true })
+                            .extend({ fileDir: z.string() }),
+                    },
+                },
             },
-            400: StdError("Track creation failed")
-        }
+            400: StdError("Track creation failed"),
+        },
     }),
     async (c) => {
         const { name, album, artists, file, lyrics } = c.req.valid("form")
@@ -43,11 +49,15 @@ app.openapi(
         if (!file.type.includes("audio/"))
             return c.json({ message: "Only audio files are accepted" }, 400)
 
-        const filePath = `tracks/${crypto.randomUUID()}/original.${file.name.split(".")[1]}`
+        const filePath = `tracks/${crypto.randomUUID()}/original.${
+            file.name.split(".")[1]
+        }`
 
+        console.log("Processing audio")
         await saveFile(filePath, file)
         const duration = await getAudioDuration(filePath)
         processAudioFile(filePath)
+        console.log("Audio processing done")
 
         const fileInfo = fsPath.parse(filePath)
 
@@ -57,8 +67,10 @@ app.openapi(
             artists,
             fileDir: fileInfo.dir,
             durationInSeconds: Math.round(duration),
-            lyrics
+            lyrics: lyrics || undefined,
         })
+
+        console.log("Nearly")
 
         await track.save()
 
@@ -74,15 +86,15 @@ app.openapi(
         ...SecurityObject,
         request: {
             query: z.object({
-                id: ZodMongooseId
+                id: ZodMongooseId,
             }),
             body: {
                 content: {
                     "multipart/form-data": {
-                        schema: TrackZodSchema.partial()
-                    }
-                }
-            }
+                        schema: TrackZodSchema.partial(),
+                    },
+                },
+            },
         },
         middleware: [adminAuth] as const,
         responses: {
@@ -90,12 +102,14 @@ app.openapi(
                 description: "Track changed",
                 content: {
                     "application/json": {
-                        schema: FormatOutputZodSchema(TrackZodSchema).omit({ file: true }).extend({ fileDir: z.string() })
-                    }
-                }
+                        schema: FormatOutputZodSchema(TrackZodSchema)
+                            .omit({ file: true })
+                            .extend({ fileDir: z.string() }),
+                    },
+                },
             },
-            400: StdError("Track change failed")
-        }
+            400: StdError("Track change failed"),
+        },
     }),
     async (c) => {
         const { name, album, artists, file, lyrics } = c.req.valid("form")
@@ -106,13 +120,14 @@ app.openapi(
 
         const track = await Track.findById(id)
 
-        if (!track)
-            return c.json({}, 404)
+        if (!track) return c.json({}, 404)
 
         if (file) {
             cleanFileOrDirectory(track.fileDir)
 
-            const filePath = `tracks/${crypto.randomUUID()}/original.${file.name.split(".")[1]}`
+            const filePath = `tracks/${crypto.randomUUID()}/original.${
+                file.name.split(".")[1]
+            }`
 
             await saveFile(filePath, file)
             const duration = await getAudioDuration(filePath)
@@ -127,11 +142,12 @@ app.openapi(
         if (name) track.name = name
         if (album) track.album = new Types.ObjectId(album)
         if (artists) {
-            const artistIds = artists.map(id => new Types.ObjectId(id))
+            const artistIds = artists.map((id) => new Types.ObjectId(id))
 
             track.artists = artistIds
         }
-        if (lyrics && typeof lyrics == "string") track.lyrics = JSON.parse(lyrics) 
+        if (lyrics && typeof lyrics == "string")
+            track.lyrics = JSON.parse(lyrics)
         else if (lyrics && typeof lyrics != "string") track.lyrics = lyrics
 
         await track.save()
@@ -148,15 +164,15 @@ app.openapi(
         ...SecurityObject,
         request: {
             query: z.object({
-                id: ZodMongooseId
-            })
+                id: ZodMongooseId,
+            }),
         },
         middleware: [adminAuth] as const,
         responses: {
             200: {
-                description: "Track deleted"
-            }
-        }
+                description: "Track deleted",
+            },
+        },
     }),
     async (c) => {
         const { id } = c.req.valid("query")
