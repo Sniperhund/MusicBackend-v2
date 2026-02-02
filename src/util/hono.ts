@@ -16,7 +16,7 @@ export const app = new OpenAPIHono({
                     {
                         message: result.error.issues[0].errors[0][0].message,
                     },
-                    400
+                    400,
                 )
             }
 
@@ -24,7 +24,7 @@ export const app = new OpenAPIHono({
                 {
                     message: `${result.error.issues[0].message}`,
                 },
-                400
+                400,
             )
         }
     },
@@ -40,7 +40,7 @@ app.use(
         rewriteRequestPath: (path) => {
             return path.replace(/^\/static/, "")
         },
-    })
+    }),
 )
 
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
