@@ -70,8 +70,10 @@ app.openapi(
             await track.save()
 
             return c.json(track, 201)
-        } catch {
+        } catch (e) {
             cleanFileOrDirectory(fileInfo.dir)
+
+            console.log(e)
 
             return c.status(500)
         }
