@@ -27,4 +27,7 @@ import "routes/search.route"
 
 import "routes/user.route"
 
-export default app
+export default {
+    port: 3001,
+    fetch: app.fetch,
+}

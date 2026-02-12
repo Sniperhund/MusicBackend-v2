@@ -69,7 +69,7 @@ export const processAudioFile = async (filePath: string) => {
                 .on("end", resolve)
                 .on("error", reject)
                 .save(outputMidAAC)
-        })
+        }),
     ])
 }
 
@@ -92,7 +92,7 @@ export const cleanFileOrDirectory = async (filePath: string) => {
 
     try {
         await rm(path, { recursive: true })
-    } catch(error: any) {
+    } catch (error: any) {
         if (error.code === "ENOENT") {
             console.error("File or directory doesn't exist")
         } else {

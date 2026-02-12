@@ -49,33 +49,33 @@ app.openapi(
         if (!file.type.includes("audio/"))
             return c.json({ message: "Only audio files are accepted" }, 400)
 
-        const filePath = `tracks/${crypto.randomUUID()}/original.${
-            file.name.split(".")[1]
-        }`
-
-        console.log("Processing audio")
-        await saveFile(filePath, file)
-        const duration = await getAudioDuration(filePath)
-        processAudioFile(filePath)
-        console.log("Audio processing done")
-
+        const filePath = `tracks/${crypto.randomUUID()}/original`
         const fileInfo = fsPath.parse(filePath)
 
-        const track = new Track({
-            name,
-            album,
-            artists,
-            fileDir: fileInfo.dir,
-            durationInSeconds: Math.round(duration),
-            lyrics: lyrics || undefined,
-        })
+        try {
+            console.log("Processing audio")
+            await saveFile(filePath, file)
+            const duration = await getAudioDuration(filePath)
+            processAudioFile(filePath)
 
-        console.log("Nearly")
+            const track = new Track({
+                name,
+                album,
+                artists,
+                fileDir: fileInfo.dir,
+                durationInSeconds: Math.round(duration),
+                lyrics: lyrics || undefined,
+            })
 
-        await track.save()
+            await track.save()
 
-        return c.json(track, 201)
-    }
+            return c.json(track, 201)
+        } catch {
+            cleanFileOrDirectory(fileInfo.dir)
+
+            return c.status(500)
+        }
+    },
 )
 
 app.openapi(
@@ -153,7 +153,7 @@ app.openapi(
         await track.save()
 
         return c.json(track, 200)
-    }
+    },
 )
 
 app.openapi(
@@ -186,5 +186,5 @@ app.openapi(
         cleanFileOrDirectory(track.fileDir)
 
         return c.json({}, 200)
-    }
+    },
 )
