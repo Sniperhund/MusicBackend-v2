@@ -37,6 +37,7 @@ export const processAudioFile = async (filePath: string) => {
     await Promise.all([
         new Promise((resolve, reject) => {
             Ffmpeg(fullPath)
+                .noVideo()
                 .audioBitrate("128k")
                 .toFormat("mp3")
                 .audioCodec("libmp3lame")
@@ -46,6 +47,7 @@ export const processAudioFile = async (filePath: string) => {
         }),
         new Promise((resolve, reject) => {
             Ffmpeg(fullPath)
+                .noVideo()
                 .audioBitrate("256k")
                 .toFormat("mp3")
                 .audioCodec("libmp3lame")
@@ -55,6 +57,7 @@ export const processAudioFile = async (filePath: string) => {
         }),
         new Promise((resolve, reject) => {
             Ffmpeg(fullPath)
+                .noVideo()
                 .audioBitrate("96k")
                 .toFormat("mp4")
                 .audioCodec("aac")
@@ -64,6 +67,7 @@ export const processAudioFile = async (filePath: string) => {
         }),
         new Promise((resolve, reject) => {
             Ffmpeg(fullPath)
+                .noVideo()
                 .audioBitrate("192k")
                 .toFormat("mp4")
                 .audioCodec("aac")
@@ -73,6 +77,7 @@ export const processAudioFile = async (filePath: string) => {
         }),
         new Promise((resolve, reject) => {
             Ffmpeg(fullPath)
+                .noVideo()
                 .audioBitrate("320k")
                 .toFormat("mp4")
                 .audioCodec("aac")
@@ -82,7 +87,7 @@ export const processAudioFile = async (filePath: string) => {
         }),
     ])
 
-    await Bun.file(filePath).delete()
+    await Bun.file(fullPath).delete()
 }
 
 export const saveFile = async (filePath: string, file: Blob) => {
