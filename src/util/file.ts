@@ -32,6 +32,7 @@ export const processAudioFile = async (filePath: string) => {
     const outputMidMp3 = fsPath.join(fileInfo.dir, "mid.mp3")
     const outputLowAAC = fsPath.join(fileInfo.dir, "low.m4a")
     const outputMidAAC = fsPath.join(fileInfo.dir, "mid.m4a")
+    const outputHighAAC = fsPath.join(fileInfo.dir, "high.m4a")
 
     await Promise.all([
         new Promise((resolve, reject) => {
@@ -70,7 +71,18 @@ export const processAudioFile = async (filePath: string) => {
                 .on("error", reject)
                 .save(outputMidAAC)
         }),
+        new Promise((resolve, reject) => {
+            Ffmpeg(fullPath)
+                .audioBitrate("320k")
+                .toFormat("mp4")
+                .audioCodec("aac")
+                .on("end", resolve)
+                .on("error", reject)
+                .save(outputHighAAC)
+        }),
     ])
+
+    await Bun.file(filePath).delete()
 }
 
 export const saveFile = async (filePath: string, file: Blob) => {
