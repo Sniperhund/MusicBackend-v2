@@ -1,6 +1,11 @@
 import { auth } from "@/middleware/auth"
 import { Track, TrackZodSchema } from "@/models/track.model"
-import { FormatOutputZodSchema, SecurityObject, ZodMongooseId, ZodQueryUnionMongooseIds } from "@/util"
+import {
+    FormatOutputZodSchema,
+    SecurityObject,
+    ZodMongooseId,
+    ZodQueryUnionMongooseIds,
+} from "@/util"
 import { app } from "@/util/hono"
 import { createRoute, z } from "@hono/zod-openapi"
 
@@ -11,7 +16,7 @@ app.openapi(
         tags: ["Track"],
         ...SecurityObject,
         request: {
-            query: ZodQueryUnionMongooseIds
+            query: ZodQueryUnionMongooseIds,
         },
         middleware: [auth] as const,
         responses: {
@@ -19,11 +24,15 @@ app.openapi(
                 description: "Fetched tracks",
                 content: {
                     "application/json": {
-                        schema: z.array(FormatOutputZodSchema(TrackZodSchema))
-                    }
-                }
-            }
-        }
+                        schema: z.array(
+                            FormatOutputZodSchema(TrackZodSchema).extend({
+                                durationInSeconds: z.number(),
+                            }),
+                        ),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { ids } = c.req.valid("query")
@@ -33,13 +42,13 @@ app.openapi(
                 path: "album",
                 select: "-artists",
                 populate: {
-                    path: "genre"
-                }
+                    path: "genre",
+                },
             })
             .populate("artists")
 
         return c.json(tracks, 200)
-    }
+    },
 )
 
 app.openapi(
@@ -50,8 +59,8 @@ app.openapi(
         ...SecurityObject,
         request: {
             params: z.object({
-                id: ZodMongooseId
-            })
+                id: ZodMongooseId,
+            }),
         },
         middleware: [auth] as const,
         responses: {
@@ -59,11 +68,15 @@ app.openapi(
                 description: "Fetched artist",
                 content: {
                     "application/json": {
-                        schema: FormatOutputZodSchema(TrackZodSchema)
-                    }
-                }
-            }
-        }
+                        schema: FormatOutputZodSchema(
+                            TrackZodSchema.extend({
+                                durationInSeconds: z.number(),
+                            }),
+                        ),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { id } = c.req.valid("param")
@@ -73,13 +86,13 @@ app.openapi(
                 path: "album",
                 select: "-artists",
                 populate: {
-                    path: "genre"
-                }
+                    path: "genre",
+                },
             })
             .populate("artists")
 
         return c.json(track, 200)
-    }
+    },
 )
 
 app.openapi(
@@ -90,8 +103,8 @@ app.openapi(
         ...SecurityObject,
         request: {
             params: z.object({
-                id: ZodMongooseId
-            })
+                id: ZodMongooseId,
+            }),
         },
         middleware: [auth] as const,
         responses: {
@@ -99,23 +112,24 @@ app.openapi(
                 description: "Fetched artist",
                 content: {
                     "application/json": {
-                        schema: FormatOutputZodSchema(z.object({
-                            synced: z.boolean(),
-                            text: z.string()
-                        }))
-                    }
-                }
-            }
-        }
+                        schema: FormatOutputZodSchema(
+                            z.object({
+                                synced: z.boolean(),
+                                text: z.string(),
+                            }),
+                        ),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { id } = c.req.valid("param")
 
-        const track = await Track.findOne({ _id: id })
-            .select("lyrics")
+        const track = await Track.findOne({ _id: id }).select("lyrics")
 
         if (!track) return c.json({}, 200)
 
         return c.json(track.lyrics, 200)
-    }
+    },
 )

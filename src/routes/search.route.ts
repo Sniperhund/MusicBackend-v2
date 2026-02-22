@@ -18,9 +18,12 @@ app.openapi(
         request: {
             query: z.object({
                 q: z.string(),
-                type: z.enum(["track", "album", "artist", "default"]).describe("Default includes all").default("default"),
-                limit: z.coerce.number().min(1).default(9)
-            })
+                type: z
+                    .enum(["track", "album", "artist", "default"])
+                    .describe("Default includes all")
+                    .default("default"),
+                limit: z.coerce.number().min(1).default(9),
+            }),
         },
         middleware: [auth] as const,
         responses: {
@@ -29,44 +32,78 @@ app.openapi(
                 content: {
                     "application/json": {
                         schema: z.object({
-                            tracks: z.array(FormatOutputZodSchema(TrackZodSchema).omit({ album: true, artists: true }).extend({ album: AlbumZodSchema, artists: z.array(ArtistZodSchema) })),
-                            albums: z.array(FormatOutputZodSchema(AlbumZodSchema.omit({ artists: true, genre: true }).extend({ artists: z.array(ArtistZodSchema), genre: GenreZodSchema }))),
-                            artists: z.array(FormatOutputZodSchema(ArtistZodSchema))
-                        })
-                    }
-                }
-            }
-        }
+                            tracks: z.array(
+                                FormatOutputZodSchema(TrackZodSchema)
+                                    .omit({ album: true, artists: true })
+                                    .extend({
+                                        album: AlbumZodSchema,
+                                        artists: z.array(ArtistZodSchema),
+                                        durationInSeconds: z.number(),
+                                    }),
+                            ),
+                            albums: z.array(
+                                FormatOutputZodSchema(
+                                    AlbumZodSchema.omit({
+                                        artists: true,
+                                        genre: true,
+                                    }).extend({
+                                        artists: z.array(ArtistZodSchema),
+                                        genre: GenreZodSchema,
+                                    }),
+                                ),
+                            ),
+                            artists: z.array(
+                                FormatOutputZodSchema(ArtistZodSchema),
+                            ),
+                        }),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { q, type, limit } = c.req.valid("query")
 
-        let results: { tracks: any[], albums: any[], artists: any[] } = { tracks: [], albums: [], artists: [] }
+        let results: { tracks: any[]; albums: any[]; artists: any[] } = {
+            tracks: [],
+            albums: [],
+            artists: [],
+        }
 
         if (type === "track" || type === "default") {
-            const rawTracks = await Track.find({}).populate(["album", "artists"]).lean()
+            const rawTracks = await Track.find({})
+                .populate(["album", "artists"])
+                .lean()
 
             const fuse = new Fuse(rawTracks, {
                 keys: ["name", "lyrics.text"],
                 threshold: 0.3,
                 distance: 100,
-                ignoreLocation: true
+                ignoreLocation: true,
             })
 
-            results.tracks = fuse.search(q).slice(0, limit).map(r => r.item)
+            results.tracks = fuse
+                .search(q)
+                .slice(0, limit)
+                .map((r) => r.item)
         }
 
         if (type === "album" || type === "default") {
-            const rawAlbums = await Album.find({}).populate(["artists", "genre"]).lean()
+            const rawAlbums = await Album.find({})
+                .populate(["artists", "genre"])
+                .lean()
 
             const fuse = new Fuse(rawAlbums, {
                 keys: ["name"],
                 threshold: 0.3,
                 distance: 100,
-                ignoreLocation: true
+                ignoreLocation: true,
             })
 
-            results.albums = fuse.search(q).slice(0, limit).map(r => r.item)
+            results.albums = fuse
+                .search(q)
+                .slice(0, limit)
+                .map((r) => r.item)
         }
 
         if (type === "artist" || type === "default") {
@@ -76,17 +113,21 @@ app.openapi(
                 keys: ["name"],
                 threshold: 0.3,
                 distance: 100,
-                ignoreLocation: true
+                ignoreLocation: true,
             })
 
-            results.artists = fuse.search(q).slice(0, limit).map(r => r.item)
+            results.artists = fuse
+                .search(q)
+                .slice(0, limit)
+                .map((r) => r.item)
         }
 
         results = {
             tracks: results.tracks.slice(0, Math.ceil(limit / 3)),
             albums: results.albums.slice(0, Math.floor(limit / 3)),
-            artists: results.artists.slice(0, Math.floor(limit / 3))
+            artists: results.artists.slice(0, Math.floor(limit / 3)),
         }
 
         return c.json(results)
-    })
+    },
+)

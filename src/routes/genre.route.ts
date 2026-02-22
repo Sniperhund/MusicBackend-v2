@@ -15,8 +15,8 @@ app.openapi(
         ...SecurityObject,
         request: {
             query: z.object({
-                limit: z.coerce.number().min(1).default(10).optional()
-            })
+                limit: z.coerce.number().min(1).default(10).optional(),
+            }),
         },
         middleware: [auth] as const,
         responses: {
@@ -24,21 +24,21 @@ app.openapi(
                 description: "Fetched random genres",
                 content: {
                     "application/json": {
-                        schema: z.array(FormatOutputZodSchema(GenreZodSchema))
-                    }
-                }
-            }
-        }
+                        schema: z.array(FormatOutputZodSchema(GenreZodSchema)),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { limit } = c.req.valid("query")
 
         const genres = await Genre.aggregate([
-            { $sample: { size: limit || 10 } }
+            { $sample: { size: limit || 10 } },
         ])
 
         return c.json(genres, 200)
-    }
+    },
 )
 
 app.openapi(
@@ -50,11 +50,11 @@ app.openapi(
         ...SecurityObject,
         request: {
             params: z.object({
-                id: ZodMongooseId
+                id: ZodMongooseId,
             }),
             query: z.object({
-                limit: z.coerce.number().min(1).default(10).optional()
-            })
+                limit: z.coerce.number().min(1).default(10).optional(),
+            }),
         },
         middleware: [auth] as const,
         responses: {
@@ -62,11 +62,15 @@ app.openapi(
                 description: "Fetched random albums from a genre",
                 content: {
                     "application/json": {
-                        schema: z.array(FormatOutputZodSchema(AlbumZodSchema.omit({ genre: true })))
-                    }
-                }
-            }
-        }
+                        schema: z.array(
+                            FormatOutputZodSchema(
+                                AlbumZodSchema.omit({ genre: true }),
+                            ),
+                        ),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { id } = c.req.valid("param")
@@ -74,26 +78,26 @@ app.openapi(
 
         const pipeline: PipelineStage[] = [
             {
-                $match: { genre: new mongoose.Types.ObjectId(id) }
+                $match: { genre: new mongoose.Types.ObjectId(id) },
             },
             {
-                $sample: { size: limit || 10 }
+                $sample: { size: limit || 10 },
             },
             {
                 $lookup: {
                     from: "artists",
                     localField: "artists",
                     foreignField: "_id",
-                    as: "artists"
-                }
+                    as: "artists",
+                },
             },
-            { $unset: "genre" }
+            { $unset: "genre" },
         ]
 
         const albums = await Album.aggregate(pipeline)
 
         return c.json(albums, 200)
-    }
+    },
 )
 
 app.openapi(
@@ -105,11 +109,11 @@ app.openapi(
         ...SecurityObject,
         request: {
             params: z.object({
-                id: ZodMongooseId
+                id: ZodMongooseId,
             }),
             query: z.object({
-                limit: z.coerce.number().min(1).default(10).optional()
-            })
+                limit: z.coerce.number().min(1).default(10).optional(),
+            }),
         },
         middleware: [auth] as const,
         responses: {
@@ -117,11 +121,17 @@ app.openapi(
                 description: "Fetched random tracks from a genre",
                 content: {
                     "application/json": {
-                        schema: z.array(FormatOutputZodSchema(TrackZodSchema))
-                    }
-                }
-            }
-        }
+                        schema: z.array(
+                            FormatOutputZodSchema(
+                                TrackZodSchema.extend({
+                                    durationInSeconds: z.number(),
+                                }),
+                            ),
+                        ),
+                    },
+                },
+            },
+        },
     }),
     async (c) => {
         const { id } = c.req.valid("param")
@@ -133,7 +143,7 @@ app.openapi(
                     from: "albums",
                     localField: "album",
                     foreignField: "_id",
-                    as: "album"
+                    as: "album",
                 },
             },
             { $unwind: "$album" },
@@ -142,16 +152,16 @@ app.openapi(
                     from: "artists",
                     localField: "artists",
                     foreignField: "_id",
-                    as: "artists"
-                }
+                    as: "artists",
+                },
             },
             { $match: { "album.genre": new mongoose.Types.ObjectId(id) } },
             { $sample: { size: limit || 10 } },
-            { $unset: "album.artists" }
+            { $unset: "album.artists" },
         ]
 
         const tracks = await Track.aggregate(pipeline)
 
         return c.json(tracks, 200)
-    }
+    },
 )

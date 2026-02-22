@@ -36,7 +36,10 @@ app.openapi(
                     "application/json": {
                         schema: FormatOutputZodSchema(TrackZodSchema)
                             .omit({ file: true })
-                            .extend({ fileDir: z.string() }),
+                            .extend({
+                                fileDir: z.string(),
+                                durationInSeconds: z.number(),
+                            }),
                     },
                 },
             },
@@ -106,7 +109,10 @@ app.openapi(
                     "application/json": {
                         schema: FormatOutputZodSchema(TrackZodSchema)
                             .omit({ file: true })
-                            .extend({ fileDir: z.string() }),
+                            .extend({
+                                fileDir: z.string(),
+                                durationInSeconds: z.number(),
+                            }),
                     },
                 },
             },
