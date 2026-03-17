@@ -12,10 +12,10 @@ app.openapi(
             body: {
                 content: {
                     "application/json": {
-                        schema: UserZodSchema
-                    }
-                }
-            }
+                        schema: UserZodSchema,
+                    },
+                },
+            },
         },
         responses: {
             201: {
@@ -23,19 +23,19 @@ app.openapi(
                 content: {
                     "application/json": {
                         schema: z.object({
-                            refreshToken: z.string()
-                        })
-                    }
-                }
+                            refreshToken: z.string(),
+                        }),
+                    },
+                },
             },
-            400: StdError("User regisration failed")
-        }
+            400: StdError("User regisration failed"),
+        },
     }),
     async (c) => {
         const body = await c.req.json()
 
         let user = await User.findOne({
-            email: body.email
+            email: body.email,
         })
 
         if (user) {
@@ -46,16 +46,19 @@ app.openapi(
 
         user = new User({
             name: body.name,
-            email: body.email,
-            passwordHash: hashedPassword
+            email: body.email.toLowerCase(),
+            passwordHash: hashedPassword,
         })
 
         await user.save()
 
-        return c.json({
-            refreshToken: user.refreshToken
-        }, 201)
-    }
+        return c.json(
+            {
+                refreshToken: user.refreshToken,
+            },
+            201,
+        )
+    },
 )
 
 app.openapi(
@@ -67,10 +70,10 @@ app.openapi(
             body: {
                 content: {
                     "application/json": {
-                        schema: UserZodSchema.omit({ name: true })
-                    }
-                }
-            }
+                        schema: UserZodSchema.omit({ name: true }),
+                    },
+                },
+            },
         },
         responses: {
             200: {
@@ -78,29 +81,33 @@ app.openapi(
                 content: {
                     "application/json": {
                         schema: z.object({
-                            refreshToken: z.string()
-                        })
-                    }
-                }
+                            refreshToken: z.string(),
+                        }),
+                    },
+                },
             },
-            400: StdError("User signin failed")
-        }
+            400: StdError("User signin failed"),
+        },
     }),
     async (c) => {
-        const { email, password } = await c.req.json()
+        const { email, password }: { email: string; password: string } =
+            await c.req.json()
 
         const user = await User.findOne({
-            email
+            email: email.toLowerCase(),
         }).select("+refreshToken +passwordHash")
 
         if (!user || !Bun.password.verifySync(password, user.passwordHash)) {
             return c.json({ message: "The email or password is wrong" }, 400)
         }
 
-        return c.json({
-            refreshToken: user.refreshToken
-        }, 200)
-    }
+        return c.json(
+            {
+                refreshToken: user.refreshToken,
+            },
+            200,
+        )
+    },
 )
 
 app.openapi(
@@ -113,11 +120,11 @@ app.openapi(
                 content: {
                     "application/json": {
                         schema: z.object({
-                            refreshToken: z.string()
-                        })
-                    }
-                }
-            }
+                            refreshToken: z.string(),
+                        }),
+                    },
+                },
+            },
         },
         responses: {
             201: {
@@ -126,32 +133,35 @@ app.openapi(
                     "application/json": {
                         schema: z.object({
                             sessionToken: z.string(),
-                            expireAt: z.string()
-                        })
-                    }
-                }
+                            expireAt: z.string(),
+                        }),
+                    },
+                },
             },
-            401: StdError("Session creation failed")
-        }
+            401: StdError("Session creation failed"),
+        },
     }),
     async (c) => {
         const { refreshToken } = await c.req.json()
 
         const user = await User.findOne({
-            refreshToken
+            refreshToken,
         })
 
         if (!user) return c.json({ message: "Invalid refresh token" }, 401)
 
         const session = new Session({
-            userId: user._id
+            userId: user._id,
         })
 
         await session.save()
 
-        return c.json({
-            sessionToken: session.token,
-            expireAt: new Date(session.createdAt.getTime() + sessionTTL)
-        }, 201)
-    }
+        return c.json(
+            {
+                sessionToken: session.token,
+                expireAt: new Date(session.createdAt.getTime() + sessionTTL),
+            },
+            201,
+        )
+    },
 )
