@@ -65,7 +65,7 @@ app.openapi(
         middleware: [auth] as const,
         responses: {
             200: {
-                description: "Fetched artist",
+                description: "Fetched tracks",
                 content: {
                     "application/json": {
                         schema: FormatOutputZodSchema(

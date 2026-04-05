@@ -25,7 +25,9 @@ import "routes/track.route"
 import "routes/all.route"
 import "routes/search.route"
 
-import "routes/user.route"
+// User
+import "routes/user/user.route"
+import "routes/user/tracks.route"
 
 export default {
     port: 3001,
