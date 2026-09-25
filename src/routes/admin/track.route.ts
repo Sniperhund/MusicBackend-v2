@@ -49,6 +49,15 @@ app.openapi(
     async (c) => {
         const { name, album, artists, file, lyrics } = c.req.valid("form")
 
+        let parsedLyrics = lyrics
+        if (typeof lyrics === "string") {
+            try {
+                parsedLyrics = JSON.parse(lyrics)
+            } catch {
+                return c.json({ message: "Lyrics must be a JSON object" }, 400)
+            }
+        }
+
         if (!file.type.includes("audio/"))
             return c.json({ message: "Only audio files are accepted" }, 400)
 
@@ -67,7 +76,7 @@ app.openapi(
                 artists,
                 fileDir: fileInfo.dir,
                 durationInSeconds: Math.round(duration),
-                lyrics: lyrics || undefined,
+                lyrics: parsedLyrics || undefined,
             })
 
             await track.save()
